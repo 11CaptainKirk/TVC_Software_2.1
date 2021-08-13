@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "blink.h"
+#include "blink.hpp"
 
 void setup() {
   // initialize digital pin LED_BUILTIN as an output.
