@@ -6,6 +6,8 @@
 #include <utility/imumaths.h>
 #include <PID_v1.h>
 #include <Adafruit_BMP3XX.h>
+#include <SD.h>
+#include <SPI.h>
 
 
 // * Setup Servos
@@ -25,6 +27,9 @@ int buttonPin = 7;
 int buttonState;
 int prevButtonState;
 bool systemState = false;
+//
+
+// Setup SD Card
 //
 
 // Setup Barometer
@@ -99,7 +104,20 @@ void setup() {
   PIDy.SetSampleTime(25);
   PIDz.SetSampleTime(25); // Increase update frequency (default 200)
   //
+
+
+  // Initialize SD Card
+  if (!SD.begin(BUILTIN_SDCARD)) {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("1. is a card inserted?");
+    Serial.println("2. is your wiring correct?");
+    Serial.println("3. did you change the chipSelect pin to match your shield or module?");
+    Serial.println("Note: press reset or reopen this serial monitor after fixing your issue!");
+    while (true);
+  }
+  Serial.println("initialization done.");
 }
+
 
 void loop() {
 
@@ -171,6 +189,22 @@ if((millis()-prevMillis) > interval){
 
 float Xorient = event.orientation.x;
 
+// Log Data to SD Card
+File logFile = SD.open("flightData.txt", FILE_WRITE);
+  if (logFile) {
+    logFile.print(millis());
+    logFile.print("\t\t");
+    logFile.print(Xorient,4);
+    logFile.print(InputY,4);
+    logFile.print(InputZ,4);
+    logFile.print(OutputY,4);
+    logFile.print(OutputZ,4);
+    logFile.print(bmp.temperature);
+    logFile.print(bmp.pressure / 100.0);
+    logFile.print(bmp.readAltitude(seaPressure));
+    logFile.println("");
+    logFile.close();
+  }
 
 // Display FP data       (Parts commented out because they interfere with performance)
 Serial.print(millis());
